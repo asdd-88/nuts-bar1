@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NUTS BAR 升盲系统</title>
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk5VVFMgQkFSIOWNh+eSseezu+e7nyIsCiAgInNob3J0X25hbWUiOiAiTlVUUyBCQVIiLAogICJzdGFydF91cmwiOiAiLi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMxYTBmMGEiLAogICJ0aGVtZV9jb2xvciI6ICIjZThhODUwIiwKICAibGFuZyI6ICJ6aC1DTiIKfQ==">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NUTS BAR">
@@ -22,10 +19,11 @@
             --danger: #ff4757;
             --break-color: #7adce4;
             --text: #f0e6dd;
-            --text-dim: #c0b0a0;
-            --border: rgba(212, 168, 83, 0.3);
-            --shadow-gold: 0 0 100px rgba(212, 168, 83, 0.5);
-            --shadow-danger: 0 0 80px rgba(255, 71, 87, 0.7);
+            --text-dim: #b8a898;
+            --text-muted: #8a7a6a;
+            --border: rgba(212, 168, 83, 0.25);
+            --shadow-gold: 0 0 60px rgba(212, 168, 83, 0.4);
+            --shadow-danger: 0 0 50px rgba(255, 71, 87, 0.6);
             --font-display: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
             --font-mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
             --card-red: #d43a3a;
@@ -46,7 +44,6 @@
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
 
         /* 金色装饰线 */
@@ -54,29 +51,15 @@
             position: absolute;
             left: 5%;
             width: 90%;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, rgba(212,168,83,0.4), var(--gold-light), rgba(212,168,83,0.4), transparent);
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(212,168,83,0.3), var(--gold-light), rgba(212,168,83,0.3), transparent);
             z-index: 2;
             pointer-events: none;
         }
         .gold-line-top { top: 0; }
         .gold-line-bottom { bottom: 0; }
 
-        /* 四角装饰 */
-        .corner-ornament {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0.5;
-        }
-        .corner-ornament.tl { top: 30px; left: 40px; background: radial-gradient(circle at 30% 30%, rgba(232,201,122,0.6) 0%, transparent 70%); }
-        .corner-ornament.tr { top: 30px; right: 40px; background: radial-gradient(circle at 70% 30%, rgba(232,201,122,0.6) 0%, transparent 70%); }
-        .corner-ornament.bl { bottom: 30px; left: 40px; background: radial-gradient(circle at 30% 70%, rgba(232,201,122,0.5) 0%, transparent 70%); }
-        .corner-ornament.br { bottom: 30px; right: 40px; background: radial-gradient(circle at 70% 70%, rgba(232,201,122,0.5) 0%, transparent 70%); }
-
-        /* ========== 扑克手牌 - 大屏放大 ========== */
+        /* 扑克手牌 - 适度大小 */
         .poker-hand {
             position: absolute;
             top: 50%;
@@ -86,182 +69,182 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
         }
-        .poker-hand.left { left: 6%; }
-        .poker-hand.right { right: 6%; }
+        .poker-hand.left { left: 4%; }
+        .poker-hand.right { right: 4%; }
         .poker-hand .hand-label {
-            font-size: 28px;
+            font-size: 18px;
             text-transform: uppercase;
-            letter-spacing: 0.3em;
+            letter-spacing: 0.25em;
             color: var(--text-dim);
             font-weight: 700;
-            text-shadow: 0 0 20px rgba(212,168,83,0.5);
+            text-shadow: 0 0 15px rgba(212,168,83,0.4);
         }
         .cards-stack {
             position: relative;
-            width: 180px;
-            height: 250px;
+            width: 110px;
+            height: 154px;
         }
         .playing-card {
             position: absolute;
-            width: 170px;
-            height: 238px;
+            width: 104px;
+            height: 146px;
             background: linear-gradient(145deg, #faf8f5 0%, #f0ebe0 40%, #e8e0d0 100%);
-            border-radius: 18px;
-            box-shadow: 0 8px 35px rgba(0,0,0,0.6), 0 3px 8px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.7);
-            border: 3px solid rgba(180,150,110,0.6);
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6);
+            border: 2px solid rgba(180,150,110,0.5);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
-        .playing-card.card-back { top: 6px; left: 8px; z-index: 1; }
+        .playing-card.card-back { top: 4px; left: 5px; z-index: 1; }
         .playing-card.card-front {
             top: 0; left: 0; z-index: 2;
             transform-origin: center center;
             animation: slide-right 2.5s ease-in-out infinite;
         }
         .card-corner { position: absolute; display: flex; flex-direction: column; align-items: center; line-height: 1; }
-        .card-corner.top-left { top: 14px; left: 16px; }
-        .card-corner.bottom-right { bottom: 14px; right: 16px; transform: rotate(180deg); }
-        .card-rank { font-weight: 900; font-size: 56px; font-family: 'Georgia', serif; }
-        .card-suit { font-size: 42px; margin-top: -4px; }
-        .card-center-suit { font-size: 80px; opacity: 0.2; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        .card-corner.top-left { top: 8px; left: 10px; }
+        .card-corner.bottom-right { bottom: 8px; right: 10px; transform: rotate(180deg); }
+        .card-rank { font-weight: 900; font-size: 34px; font-family: 'Georgia', serif; }
+        .card-suit { font-size: 26px; margin-top: -3px; }
+        .card-center-suit { font-size: 50px; opacity: 0.2; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
         .card-red .card-rank, .card-red .card-suit, .card-red .card-center-suit { color: var(--card-red); }
         .card-black .card-rank, .card-black .card-suit, .card-black .card-center-suit { color: var(--card-black); }
         .poker-hand { animation: hand-glow 3s ease-in-out infinite; }
         .poker-hand.right { animation-delay: 1.5s; }
         @keyframes hand-glow {
-            0%,100%{ filter: drop-shadow(0 0 15px rgba(232,168,80,0.5)); }
-            50%{ filter: drop-shadow(0 0 40px rgba(245,200,130,0.9)); }
+            0%,100%{ filter: drop-shadow(0 0 10px rgba(232,168,80,0.4)); }
+            50%{ filter: drop-shadow(0 0 28px rgba(245,200,130,0.75)); }
         }
         @keyframes slide-right {
             0%,100%{ transform: translateX(0) rotate(0deg); }
-            50%{ transform: translateX(40%) rotate(5deg); }
+            50%{ transform: translateX(38%) rotate(5deg); }
         }
         .poker-hand.right .card-front { animation-delay: 1.25s; }
 
-        /* ========== HEADER ========== */
+        /* HEADER */
         .header {
             display: flex;
             align-items: center;
-            gap: 30px;
+            gap: 20px;
             z-index: 10;
             position: relative;
             flex-shrink: 0;
-            padding: 30px 40px;
+            padding: 16px 30px;
         }
         .header .logo-wrap { position: relative; flex-shrink: 0; }
         .header .logo-img {
-            height: 120px;
-            width: 120px;
-            border-radius: 24px;
+            height: 72px;
+            width: 72px;
+            border-radius: 16px;
             object-fit: cover;
-            border: 3px solid rgba(232,168,80,0.5);
-            box-shadow: 0 0 40px rgba(212,168,83,0.4);
+            border: 2px solid rgba(232,168,80,0.5);
+            box-shadow: 0 0 25px rgba(212,168,83,0.3);
         }
         .header .logo-fallback {
-            height: 120px;
-            width: 120px;
-            border-radius: 24px;
+            height: 72px;
+            width: 72px;
+            border-radius: 16px;
             background: linear-gradient(135deg, #c4813a, #e8a850, #f5c882);
             display: none;
             align-items: center;
             justify-content: center;
             font-weight: 900;
-            font-size: 50px;
+            font-size: 32px;
             color: #1a0f0a;
-            border: 3px solid rgba(255,255,255,0.4);
+            border: 2px solid rgba(255,255,255,0.3);
         }
         .header h1 {
-            font-size: 80px;
+            font-size: 52px;
             font-weight: 800;
             background: linear-gradient(180deg, #f5d8a8 0%, #e8a850 30%, #d4953a 60%, #c4813a 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             animation: shimmer-gold 4.5s infinite;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
         }
         @keyframes shimmer-gold { 0%,100%{ background-position: 0% 30%; } 50%{ background-position: 0% 70%; } }
         .header .clock-badge {
             margin-left: auto;
-            font-size: 36px;
+            font-size: 24px;
             color: #e0d0b8;
             background: rgba(30,15,8,0.8);
-            padding: 16px 36px;
-            border-radius: 28px;
+            padding: 10px 24px;
+            border-radius: 20px;
             font-family: var(--font-mono);
-            border: 2px solid rgba(212,168,83,0.4);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212,168,83,0.35);
+            backdrop-filter: blur(6px);
             white-space: nowrap;
         }
-        .clock-label { font-size: 22px; color: var(--text-dim); margin-right: 12px; font-weight: 500; }
+        .clock-label { font-size: 14px; color: var(--text-muted); margin-right: 8px; }
 
-        /* ========== MAIN ========== */
+        /* MAIN */
         .main {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 40px;
+            gap: 24px;
             z-index: 10;
-            padding: 20px 0;
+            padding: 10px 0;
         }
         .stage-badge {
-            font-size: 28px;
+            font-size: 16px;
             text-transform: uppercase;
             letter-spacing: 0.2em;
             color: var(--text-dim);
             background: rgba(30,15,8,0.7);
-            padding: 14px 40px;
-            border-radius: 30px;
-            border: 2px solid rgba(212,168,83,0.3);
+            padding: 8px 28px;
+            border-radius: 20px;
+            border: 1px solid rgba(212,168,83,0.25);
             font-weight: 600;
         }
         .stage-badge.break-mode {
             color: var(--break-color);
-            border-color: rgba(122,220,228,0.5);
-            background: rgba(95,180,200,0.15);
+            border-color: rgba(122,220,228,0.4);
+            background: rgba(95,180,200,0.12);
         }
         .level-info {
-            font-size: 72px;
+            font-size: 44px;
             font-weight: 600;
-            background: rgba(20,10,5,0.7);
-            padding: 28px 80px;
-            border-radius: 28px;
-            border: 2px solid var(--border);
+            background: rgba(20,10,5,0.65);
+            padding: 18px 50px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
             text-align: center;
-            backdrop-filter: blur(10px);
-            letter-spacing: 0.06em;
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.05em;
         }
         .level-info.break-mode {
-            border-color: rgba(122,220,228,0.55);
-            box-shadow: 0 0 60px rgba(122,220,228,0.25);
-            color: #c8f4f7;
+            border-color: rgba(122,220,228,0.45);
+            box-shadow: 0 0 40px rgba(122,220,228,0.2);
+            color: #c5f0f4;
         }
         .blinds-gold {
-            font-weight: 800;
+            font-weight: 700;
             color: var(--gold-light);
-            text-shadow: 0 0 40px rgba(232,201,122,0.5);
+            text-shadow: 0 0 25px rgba(232,201,122,0.4);
         }
 
         /* 计时器 */
         .timer {
-            font-size: 200px;
+            font-size: 130px;
             font-weight: 900;
             font-family: var(--font-mono);
             color: #f5c882;
-            text-shadow: var(--shadow-gold), 0 0 150px rgba(212,168,83,0.4);
+            text-shadow: var(--shadow-gold);
             transition: color 0.5s, text-shadow 0.5s;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
             line-height: 1;
         }
         .timer.warning {
             color: #ff9a56;
-            text-shadow: 0 0 100px rgba(255,140,60,0.7);
+            text-shadow: 0 0 60px rgba(255,140,60,0.7);
             animation: pulse-warning 0.9s infinite;
         }
         .timer.danger {
@@ -271,93 +254,92 @@
         }
         .timer.break-timer {
             color: #7adce4;
-            text-shadow: 0 0 80px rgba(122,220,228,0.6);
+            text-shadow: 0 0 50px rgba(122,220,228,0.5);
         }
         .timer.paused-blink { animation: blink-pause 1.6s infinite; }
-        @keyframes pulse-warning { 0%,100%{transform:scale(1);} 50%{transform:scale(1.02);} }
-        @keyframes pulse-danger { 0%,100%{transform:scale(1);} 50%{transform:scale(1.04);} }
+        @keyframes pulse-warning { 0%,100%{transform:scale(1);} 50%{transform:scale(1.015);} }
+        @keyframes pulse-danger { 0%,100%{transform:scale(1);} 50%{transform:scale(1.03);} }
         @keyframes blink-pause { 0%,100%{opacity:1;} 38%{opacity:0.3;} 72%{opacity:1;} }
 
         .next-preview {
-            font-size: 36px;
+            font-size: 22px;
             color: var(--text-dim);
-            background: rgba(20,10,5,0.6);
-            padding: 20px 50px;
-            border-radius: 22px;
-            border: 2px solid rgba(212,168,83,0.2);
-            backdrop-filter: blur(8px);
+            background: rgba(20,10,5,0.5);
+            padding: 12px 30px;
+            border-radius: 14px;
+            border: 1px solid rgba(212,168,83,0.18);
+            backdrop-filter: blur(6px);
             text-align: center;
         }
-        .next-preview span { color: #e0d0b8; font-weight: 600; }
+        .next-preview span { color: #d5c0a0; font-weight: 600; }
 
         .progress-bar-wrap {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
             max-width: 85vw;
-            padding: 0 20px;
+            padding: 0 16px;
         }
         .progress-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 5px;
-            background: rgba(255,255,255,0.12);
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.1);
             cursor: pointer;
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.25s;
             flex-shrink: 0;
         }
         .progress-dot.active {
             background: var(--primary);
-            box-shadow: 0 0 20px rgba(232,168,80,0.8);
-            transform: scale(1.5);
-            border-color: rgba(245,200,130,0.6);
+            box-shadow: 0 0 14px rgba(232,168,80,0.7);
+            transform: scale(1.4);
+            border-color: rgba(245,200,130,0.5);
         }
-        .progress-dot.done { background: rgba(200,150,80,0.6); }
-        .progress-dot.break-dot { border-radius: 50%; background: rgba(122,220,228,0.25); }
-        .progress-dot.break-dot.active { background: var(--break-color); box-shadow: 0 0 20px rgba(122,220,228,0.8); }
+        .progress-dot.done { background: rgba(200,150,80,0.5); }
+        .progress-dot.break-dot { border-radius: 50%; background: rgba(122,220,228,0.2); }
+        .progress-dot.break-dot.active { background: var(--break-color); box-shadow: 0 0 14px rgba(122,220,228,0.7); }
 
-        /* ========== 按钮 ========== */
+        /* 按钮 */
         .btns {
             display: flex;
-            gap: 20px;
+            gap: 14px;
             flex-wrap: wrap;
             justify-content: center;
             z-index: 10;
             flex-shrink: 0;
-            padding: 20px 40px 30px;
+            padding: 14px 30px 20px;
         }
         button {
-            background: rgba(25,12,6,0.8);
-            color: #e0d5c8;
-            border: 2px solid rgba(212,168,83,0.35);
-            padding: 18px 36px;
-            font-size: 28px;
-            font-weight: 700;
-            border-radius: 18px;
+            background: rgba(25,12,6,0.75);
+            color: #d5c8b8;
+            border: 1px solid rgba(212,168,83,0.3);
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.22s;
-            letter-spacing: 0.06em;
-            backdrop-filter: blur(8px);
+            letter-spacing: 0.05em;
+            backdrop-filter: blur(6px);
             font-family: inherit;
             white-space: nowrap;
-            min-width: 140px;
             text-align: center;
         }
         button:hover {
-            border-color: rgba(232,201,122,0.6);
-            box-shadow: 0 0 30px rgba(212,168,83,0.3);
-            transform: translateY(-3px);
+            border-color: rgba(232,201,122,0.55);
+            box-shadow: 0 0 20px rgba(212,168,83,0.25);
+            transform: translateY(-2px);
         }
         button:active { transform: scale(0.95); }
         button.btn-start {
             background: linear-gradient(135deg, #b87830, #d4953a, #e8a850);
             color: #1a0f0a;
             border: none;
-            box-shadow: 0 6px 35px rgba(200,140,50,0.5);
-            font-size: 32px;
-            padding: 20px 50px;
+            box-shadow: 0 4px 20px rgba(200,140,50,0.4);
+            font-size: 20px;
+            padding: 14px 32px;
         }
         button.btn-start.running {
             background: #444;
@@ -367,22 +349,21 @@
         }
         button.btn-pause.paused-state { opacity: 0.5; pointer-events: none; }
         button.btn-settings {
-            background: rgba(30,15,8,0.85);
-            border-color: rgba(212,168,83,0.4);
+            background: rgba(30,15,8,0.8);
+            border-color: rgba(212,168,83,0.35);
             color: #d5c0a0;
-            font-size: 26px;
         }
 
-        /* ========== 设置面板 ========== */
+        /* 设置面板 */
         .settings-overlay {
             position: fixed;
             inset: 0;
             z-index: 100;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.75);
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(6px);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
@@ -390,109 +371,106 @@
         .settings-overlay.open { opacity: 1; pointer-events: auto; }
         .settings-panel {
             background: linear-gradient(180deg, #1e110a 0%, #150a04 100%);
-            border: 2px solid rgba(212,168,83,0.5);
-            border-radius: 24px;
-            padding: 40px;
-            width: 85vw;
-            max-width: 900px;
-            max-height: 80vh;
+            border: 2px solid rgba(212,168,83,0.4);
+            border-radius: 20px;
+            padding: 30px;
+            width: 75vw;
+            max-width: 800px;
+            max-height: 75vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 0 80px rgba(212,168,83,0.3);
+            box-shadow: 0 0 60px rgba(212,168,83,0.25);
             position: relative;
         }
         .settings-panel h2 {
-            font-size: 44px;
+            font-size: 30px;
             font-weight: 700;
             color: var(--gold-light);
             text-align: center;
-            margin-bottom: 24px;
-            letter-spacing: 0.08em;
+            margin-bottom: 18px;
+            letter-spacing: 0.06em;
         }
-        .settings-list-wrap { flex: 1; overflow-y: auto; max-height: 50vh; padding-right: 10px; margin-bottom: 20px; }
+        .settings-list-wrap { flex: 1; overflow-y: auto; max-height: 48vh; padding-right: 8px; margin-bottom: 16px; }
         .settings-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            gap: 10px;
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
             flex-wrap: wrap;
         }
-        .settings-row .row-num { width: 40px; text-align: center; font-size: 20px; color: var(--text-dim); font-weight: 600; }
+        .settings-row .row-num { width: 30px; text-align: center; font-size: 16px; color: var(--text-dim); font-weight: 600; }
         .settings-row select, .settings-row input {
             background: rgba(20,10,5,0.8);
-            border: 2px solid rgba(212,168,83,0.35);
+            border: 1px solid rgba(212,168,83,0.35);
             color: #e0d0b8;
-            padding: 12px 14px;
-            border-radius: 10px;
-            font-size: 22px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 16px;
             outline: none;
             font-family: inherit;
         }
-        .settings-row select { flex: 0 0 100px; font-size: 20px; }
-        .settings-row input.num-input { width: 80px; text-align: center; font-size: 20px; }
-        .settings-row input.label-input { flex: 1; min-width: 120px; max-width: 200px; font-size: 20px; }
+        .settings-row select { flex: 0 0 80px; font-size: 15px; }
+        .settings-row input.num-input { width: 60px; text-align: center; font-size: 15px; }
+        .settings-row input.label-input { flex: 1; min-width: 100px; max-width: 160px; font-size: 15px; }
         .settings-row .row-delete {
-            width: 44px;
-            height: 44px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            background: rgba(255,71,87,0.2);
+            background: rgba(255,71,87,0.15);
             color: #ff6b6b;
             cursor: pointer;
-            font-size: 24px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(255,71,87,0.3);
+            border: 1px solid rgba(255,71,87,0.25);
         }
-        .settings-actions { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; flex-shrink: 0; }
-        .settings-actions button { font-size: 22px; padding: 14px 28px; }
+        .settings-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; flex-shrink: 0; }
+        .settings-actions button { font-size: 16px; padding: 10px 20px; }
         .settings-close {
             position: absolute;
-            top: 16px;
-            right: 20px;
-            width: 48px;
-            height: 48px;
+            top: 12px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.08);
-            color: #ccc;
+            background: rgba(255,255,255,0.06);
+            color: #bbb;
             cursor: pointer;
-            font-size: 28px;
+            font-size: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* ========== 响应式（小屏手机降级） ========== */
+        /* 响应式手机 */
         @media (max-width: 768px) {
-            .header h1 { font-size: 36px; }
-            .header .logo-img { height: 60px; width: 60px; }
-            .header .clock-badge { font-size: 18px; padding: 8px 16px; }
-            .clock-label { font-size: 12px; }
-            .level-info { font-size: 28px; padding: 16px 30px; }
-            .timer { font-size: 80px; }
-            .next-preview { font-size: 18px; }
-            .poker-hand.left { left: 2%; }
-            .poker-hand.right { right: 2%; }
-            .cards-stack { width: 80px; height: 112px; }
-            .playing-card { width: 74px; height: 104px; border-radius: 9px; }
-            .card-rank { font-size: 24px; }
-            .card-suit { font-size: 18px; }
-            .card-center-suit { font-size: 36px; }
-            button { font-size: 14px; padding: 10px 18px; }
-            button.btn-start { font-size: 16px; padding: 12px 24px; }
-            .stage-badge { font-size: 14px; padding: 8px 20px; }
+            .header h1 { font-size: 28px; }
+            .header .logo-img { height: 44px; width: 44px; border-radius: 10px; }
+            .header .clock-badge { font-size: 14px; padding: 6px 12px; }
+            .clock-label { font-size: 10px; }
+            .level-info { font-size: 22px; padding: 10px 20px; }
+            .timer { font-size: 64px; }
+            .next-preview { font-size: 14px; }
+            .stage-badge { font-size: 11px; }
+            button { font-size: 12px; padding: 8px 14px; }
+            button.btn-start { font-size: 14px; padding: 10px 20px; }
+            .poker-hand.left { left: 1%; }
+            .poker-hand.right { right: 1%; }
+            .cards-stack { width: 56px; height: 78px; }
+            .playing-card { width: 52px; height: 72px; border-radius: 6px; }
+            .card-rank { font-size: 16px; }
+            .card-suit { font-size: 12px; }
+            .card-center-suit { font-size: 24px; }
+            .hand-label { font-size: 10px; }
         }
     </style>
 </head>
 <body>
     <div class="gold-line-top"></div>
     <div class="gold-line-bottom"></div>
-    <div class="corner-ornament tl"></div>
-    <div class="corner-ornament tr"></div>
-    <div class="corner-ornament bl"></div>
-    <div class="corner-ornament br"></div>
 
     <!-- 左侧对A -->
     <div class="poker-hand left">
@@ -577,16 +555,10 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'nuts-bar-tv-v1';
-                    self.addEventListener('install', event => {
-                        event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])).then(() => self.skipWaiting()));
-                    });
-                    self.addEventListener('activate', event => {
-                        event.waitUntil(caches.keys().then(names => Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))).then(() => self.clients.claim()));
-                    });
-                    self.addEventListener('fetch', event => {
-                        event.respondWith(caches.match(event.request).then(r => r || fetch(event.request)));
-                    });
+                    const CACHE_NAME = 'nuts-bar-tv-v2';
+                    self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])).then(() => self.skipWaiting())); });
+                    self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(n => Promise.all(n.filter(x => x !== CACHE_NAME).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
+                    self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });
                 `;
                 const blob = new Blob([swCode], { type: 'application/javascript' });
                 navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
@@ -675,13 +647,13 @@
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'square';
-                    osc.frequency.setValueAtTime(1400, t);
-                    gain.gain.setValueAtTime(0.12, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+                    osc.frequency.setValueAtTime(1200, t);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start(t);
-                    osc.stop(t + 0.08);
+                    osc.stop(t + 0.07);
                 } catch (e) {}
             }
 
@@ -750,7 +722,7 @@
                     if (i === levelIndex) cls += ' active';
                     else if (i < levelIndex) cls += ' done';
                     if (levels[i].type === 'break') cls += ' break-dot';
-                    html += `<span class="${cls}" data-index="${i}" title="${levels[i].type==='break'?'休息':levels[i].blind1+'/'+levels[i].blind2} — ${levels[i].minutes}分钟"></span>`;
+                    html += `<span class="${cls}" data-index="${i}" title="${levels[i].type==='break'?'休息':levels[i].blind1+'/'+levels[i].blind2}"></span>`;
                 }
                 elProgressBar.innerHTML = html;
                 elProgressBar.querySelectorAll('.progress-dot').forEach(dot => {
@@ -863,7 +835,6 @@
                 elLiveClock.innerHTML = `<span class="clock-label">当前时间</span>${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
             }
 
-            // 设置面板
             function openSettings() { settingsEditedLevels = JSON.parse(JSON.stringify(levels)); renderSettingsList(); elSettingsOverlay.classList.add('open'); }
             function closeSettings() { elSettingsOverlay.classList.remove('open'); settingsEditedLevels = null; }
             function renderSettingsList() {
@@ -875,9 +846,9 @@
                         <span class="row-num">${idx+1}</span>
                         <select class="type-select" data-index="${idx}"><option value="blind"${!isBreak?' selected':''}>盲注</option><option value="break"${isBreak?' selected':''}>休息</option></select>
                         <input type="number" class="num-input" value="${lv.blind1}" data-index="${idx}" data-field="blind1"${isBreak?' disabled':''}>
-                        <span style="color:var(--text-dim);font-size:18px;">/</span>
+                        <span style="color:var(--text-dim);font-size:14px;">/</span>
                         <input type="number" class="num-input" value="${lv.blind2}" data-index="${idx}" data-field="blind2"${isBreak?' disabled':''}>
-                        <span style="color:var(--text-muted);font-size:14px;">分</span>
+                        <span style="color:var(--text-muted);font-size:11px;">分</span>
                         <input type="number" class="num-input" value="${lv.minutes}" data-index="${idx}" data-field="minutes" min="1">
                         <input type="text" class="label-input" value="${lv.label||''}" data-index="${idx}" data-field="label" placeholder="标签">
                         <button class="row-delete" data-index="${idx}">✕</button>
