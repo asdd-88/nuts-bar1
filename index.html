@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUTS BAR 升盲系统</title>
+    <style>
+        :root {
+            --bg-deep: #0d0705;
+            --bg-rich: #1a0f0a;
+            --bg-warm: #2d1812;
+            --surface: rgba(255, 255, 255, 0.04);
+            --primary: #e8a850;
+            --primary-bright: #f5c882;
+            --gold: #d4a853;
+            --gold-light: #e8c97a;
+            --danger: #ff4757;
+            --break-color: #7adce4;
+            --text: #f0e6dd;
+            --text-dim: #b8a898;
+            --text-muted: #8a7a6a;
+            --border: rgba(212, 168, 83, 0.25);
+            --shadow-gold: 0 0 80px rgba(212, 168, 83, 0.35);
+            --shadow-danger: 0 0 50px rgba(255, 71, 87, 0.55);
+            --font-display: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+            --font-mono: 'SF Mono', 'Consolas', 'Menlo', 'Segoe UI', monospace;
+            --card-red: #d43a3a;
+            --card-black: #1a1a1a;
+            --texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--texture-noise),
+                radial-gradient(ellipse at 8% 45%, rgba(212, 168, 83, 0.1) 0%, rgba(180, 130, 60, 0.04) 25%, transparent 55%),
+                radial-gradient(ellipse at 92% 45%, rgba(212, 168, 83, 0.1) 0%, rgba(180, 130, 60, 0.04) 25%, transparent 55%),
+                radial-gradient(ellipse at 55% 18%, rgba(232, 168, 80, 0.14) 0%, rgba(200, 130, 60, 0.05) 35%, transparent 65%),
+                radial-gradient(ellipse at 50% 85%, rgba(180, 120, 50, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 55% 35%, #2d1812 0%, #1a0f0a 40%, #0d0705 70%, #080302 100%);
+            color: var(--text);
+            font-family: var(--font-display);
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: clamp(14px, 2.2vw, 30px);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .gold-line-top,
+        .gold-line-bottom {
+            position: absolute;
+            left: 5%;
+            width: 90%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.3), var(--gold-light), rgba(212, 168, 83, 0.3), transparent);
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .gold-line-top { top: 0; }
+        .gold-line-bottom { bottom: 0; }
+
+        .corner-ornament {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.4;
+        }
+        .corner-ornament.tl { top: 18px; left: 22px; background: radial-gradient(circle at 30% 30%, rgba(232,201,122,0.5) 0%, transparent 60%); }
+        .corner-ornament.tr { top: 18px; right: 22px; background: radial-gradient(circle at 70% 30%, rgba(232,201,122,0.5) 0%, transparent 60%); }
+        .corner-ornament.bl { bottom: 18px; left: 22px; background: radial-gradient(circle at 30% 70%, rgba(232,201,122,0.4) 0%, transparent 60%); }
+        .corner-ornament.br { bottom: 18px; right: 22px; background: radial-gradient(circle at 70% 70%, rgba(232,201,122,0.4) 0%, transparent 60%); }
+
+        /* ========== 扑克手牌 ========== */
+        .poker-hand {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .poker-hand.left { left: clamp(36px, 8vw, 120px); }
+        .poker-hand.right { right: clamp(36px, 8vw, 120px); }
+        .poker-hand .hand-label {
+            font-size: clamp(12px, 1.5vw, 16px);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(212,168,83,0.3);
+        }
+        .cards-stack {
+            position: relative;
+            width: clamp(60px, 10vw, 90px);
+            height: clamp(84px, 14vw, 126px);
+        }
+        .playing-card {
+            position: absolute;
+            width: clamp(56px, 9vw, 84px);
+            height: clamp(78px, 12.5vw, 116px);
+            background: linear-gradient(145deg, #faf8f5 0%, #f0ebe0 40%, #e8e0d0 100%);
+            border-radius: 9px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.6);
+            border: 1.5px solid rgba(180,150,110,0.5);
+        }
+        .playing-card.card-back { top: 2px; left: 2px; z-index: 1; }
+        .playing-card.card-front {
+            top: 0; left: 0; z-index: 2;
+            transform-origin: center center;
+            animation: slide-right 2.5s ease-in-out infinite;
+        }
+        .card-corner { position: absolute; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+        .card-corner.top-left { top: 7px; left: 8px; }
+        .card-corner.bottom-right { bottom: 7px; right: 8px; transform: rotate(180deg); }
+        .card-rank { font-weight: 900; font-size: clamp(18px, 2.8vw, 28px); font-family: 'Georgia', 'Times New Roman', serif; }
+        .card-suit { font-size: clamp(14px, 2vw, 22px); margin-top: -2px; }
+        .card-center-suit { font-size: clamp(26px, 4vw, 44px); opacity: 0.25; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        .card-red .card-rank, .card-red .card-suit, .card-red .card-center-suit { color: var(--card-red); }
+        .card-black .card-rank, .card-black .card-suit, .card-black .card-center-suit { color: var(--card-black); }
+        .poker-hand { animation: hand-glow 3s ease-in-out infinite; }
+        .poker-hand.right { animation-delay: 1.5s; }
+        @keyframes hand-glow {
+            0%,100%{ filter: drop-shadow(0 0 8px rgba(232,168,80,0.4)); }
+            50%{ filter: drop-shadow(0 0 22px rgba(245,200,130,0.75)); }
+        }
+        @keyframes slide-right {
+            0%,100%{ transform: translateX(0) rotate(0deg); }
+            50%{ transform: translateX(42%) rotate(5deg); }
+        }
+        .poker-hand.right .card-front { animation-delay: 1.25s; }
+
+        /* ========== HEADER ========== */
+        .header { display: flex; align-items: center; gap: 16px; z-index: 10; position: relative; flex-shrink: 0; }
+        .header .logo-wrap { position: relative; flex-shrink: 0; }
+        .header .logo-img {
+            height: 132px; width: 132px; border-radius: 30px; object-fit: cover;
+            border: 2px solid rgba(232,168,80,0.45); box-shadow: 0 0 30px rgba(212,168,83,0.3);
+        }
+        .header .logo-fallback {
+            height: 132px; width: 132px; border-radius: 30px;
+            background: linear-gradient(135deg, #c4813a, #e8a850, #f5c882);
+            display: none; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 54px; color: #1a0f0a;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .header h1 {
+            font-size: clamp(60px, 10.5vw, 84px); font-weight: 700;
+            background: linear-gradient(180deg, #f5d8a8 0%, #e8a850 30%, #d4953a 60%, #c4813a 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; animation: shimmer-gold 4.5s infinite;
+        }
+        @keyframes shimmer-gold { 0%,100%{ background-position: 0% 30%; } 50%{ background-position: 0% 70%; } }
+        .header .clock-badge {
+            margin-left: auto; font-size: 19px; color: #e0d0b8;
+            background: rgba(30,15,8,0.7); padding: 10px 22px; border-radius: 24px;
+            font-family: var(--font-mono); border: 1px solid rgba(212,168,83,0.35);
+            backdrop-filter: blur(6px); white-space: nowrap;
+        }
+        .clock-label { font-size: 13px; color: var(--text-muted); margin-right: 6px; }
+
+        /* ========== MAIN ========== */
+        .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(22px, 4vh, 44px); z-index: 10; }
+        .stage-badge {
+            font-size: 14px; text-transform: uppercase; color: var(--text-dim);
+            background: rgba(30,15,8,0.6); padding: 8px 22px; border-radius: 22px;
+            border: 1px solid rgba(212,168,83,0.2);
+        }
+        .stage-badge.break-mode { color: var(--break-color); border-color: rgba(122,220,228,0.4); }
+        .level-info {
+            font-size: clamp(32px, 5vw, 50px); font-weight: 500;
+            background: rgba(20,10,5,0.65); padding: clamp(20px,3vw,30px) clamp(40px,7vw,64px);
+            border-radius: 20px; border: 1px solid var(--border); text-align: center;
+            backdrop-filter: blur(8px);
+        }
+        .level-info.break-mode { border-color: rgba(122,220,228,0.45); }
+        .blinds-gold { font-weight: 700; color: var(--gold-light); text-shadow: 0 0 25px rgba(232,201,122,0.4); }
+        .timer {
+            font-size: clamp(65px, 12vw, 120px); font-weight: 900;
+            font-family: var(--font-mono); color: #f5c882;
+            text-shadow: var(--shadow-gold); transition: color 0.5s, text-shadow 0.5s;
+        }
+        .timer.warning { color: #ff9a56; text-shadow: 0 0 70px rgba(255,140,60,0.6); animation: pulse-warning 0.9s infinite; }
+        .timer.danger { color: #ff4a4a; text-shadow: var(--shadow-danger); animation: pulse-danger 0.45s infinite; }
+        .timer.break-timer { color: #7adce4; text-shadow: 0 0 50px rgba(122,220,228,0.5); }
+        .timer.paused-blink { animation: blink-pause 1.6s infinite; }
+        @keyframes pulse-warning { 0%,100%{transform:scale(1);} 50%{transform:scale(1.018);} }
+        @keyframes pulse-danger { 0%,100%{transform:scale(1);} 50%{transform:scale(1.035);} }
+        @keyframes blink-pause { 0%,100%{opacity:1;} 38%{opacity:0.35;} 72%{opacity:1;} }
+
+        .next-preview {
+            font-size: 20px; color: var(--text-dim);
+            background: rgba(20,10,5,0.5); padding: 16px 34px; border-radius: 14px;
+            border:1px solid rgba(212,168,83,0.18); backdrop-filter: blur(4px); text-align: center;
+        }
+        .next-preview span { color: #d5c0a0; font-weight: 500; }
+        .progress-bar-wrap { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 90vw; padding: 0 12px; }
+        .progress-dot {
+            width: 11px; height: 11px; border-radius: 3px; background: rgba(255,255,255,0.1);
+            cursor: pointer; border:1px solid rgba(255,255,255,0.06); transition: all 0.25s; flex-shrink: 0;
+        }
+        .progress-dot.active { background: var(--primary); box-shadow:0 0 14px rgba(232,168,80,0.7); transform:scale(1.4); }
+        .progress-dot.done { background: rgba(200,150,80,0.5); }
+        .progress-dot.break-dot { border-radius:50%; background: rgba(122,220,228,0.22); }
+        .progress-dot.break-dot.active { background: var(--break-color); box-shadow:0 0 14px rgba(122,220,228,0.7); }
+        .progress-dot:hover { transform: scale(1.6); }
+
+        /* ========== 按钮 ========== */
+        .btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; z-index: 10; flex-shrink: 0; padding-bottom: 14px; }
+        button {
+            background: rgba(25,12,6,0.7); color: #d5c8b8; border:1px solid rgba(212,168,83,0.3);
+            padding: clamp(10px,1.5vw,13px) clamp(16px,2.5vw,26px); font-size: clamp(13px,1.6vw,16px);
+            font-weight: 600; border-radius: 11px; cursor: pointer; transition: all 0.22s;
+            letter-spacing: 0.04em; backdrop-filter: blur(4px); font-family: inherit; white-space: nowrap;
+        }
+        button:hover { border-color: rgba(232,201,122,0.55); box-shadow: 0 0 20px rgba(212,168,83,0.2); }
+        button:active { transform: scale(0.95); }
+        button.btn-start { background: linear-gradient(135deg,#b87830,#d4953a,#e8a850); color:#1a0f0a; border:none; }
+        button.btn-start.running { background:#444; color:#999; pointer-events:none; }
+        button.btn-pause.paused-state { opacity:0.6; pointer-events:none; }
+        button.btn-settings { background: rgba(30,15,8,0.8); border-color: rgba(212,168,83,0.35); color:#d5c0a0; }
+
+        /* ========== 设置面板 ========== */
+        .settings-overlay {
+            position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.75);
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .settings-overlay.open { opacity: 1; pointer-events: auto; }
+        .settings-panel {
+            background: linear-gradient(180deg, #1e110a 0%, #150a04 100%);
+            border:1px solid rgba(212,168,83,0.4); border-radius: 18px;
+            padding: clamp(20px,3vw,30px); width: min(95vw,700px); max-height: 85vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 60px rgba(212,168,83,0.2), 0 20px 50px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        .settings-panel h2 {
+            font-size: clamp(20px,2.5vw,26px); font-weight: 700; color: var(--gold-light);
+            text-align: center; margin-bottom: 16px; letter-spacing: 0.06em;
+            text-shadow: 0 0 20px rgba(232,201,122,0.3); flex-shrink: 0;
+        }
+        .settings-list-wrap { flex: 1; overflow-y: auto; max-height: 55vh; padding-right: 6px; margin-bottom: 14px; }
+        .settings-row { display: flex; align-items: center; gap: 6px; padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; }
+        .settings-row .row-num { width: 24px; text-align: center; font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+        .settings-row select, .settings-row input {
+            background: rgba(20,10,5,0.7); border:1px solid rgba(212,168,83,0.3); color:#e0d0b8;
+            padding: 7px 8px; border-radius: 7px; font-size: 13px; outline: none;
+        }
+        .settings-row select { flex:0 0 68px; }
+        .settings-row input.num-input { width: 56px; text-align: center; }
+        .settings-row input.label-input { flex:1; min-width: 80px; max-width: 130px; }
+        .settings-row .row-delete { width:28px; height:28px; border-radius:50%; background:rgba(255,71,87,0.15); color:#ff6b6b; cursor:pointer; }
+        .settings-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; flex-shrink: 0; }
+        .settings-close { position: absolute; top:10px; right:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.05); color:#999; cursor:pointer; }
+
+        /* 全屏样式 */
+        :fullscreen body { padding:40px 80px; }
+        :fullscreen .btns { display:none !important; }
+        :fullscreen .timer { font-size:clamp(110px,20vw,220px); }
+        :fullscreen .level-info { font-size:clamp(38px,5vw,56px); padding:32px 70px; }
+        :fullscreen .next-preview { font-size:24px; }
+        :fullscreen .poker-hand.left { left:clamp(50px,10vw,150px); }
+        :fullscreen .poker-hand.right { right:clamp(50px,10vw,150px); }
+        :fullscreen .cards-stack { width:clamp(80px,13vw,120px); height:clamp(110px,18vw,168px); }
+        :fullscreen .playing-card { width:clamp(74px,11.5vw,112px); height:clamp(100px,16vw,154px); }
+
+        :-webkit-full-screen body { padding:40px 80px; }
+        :-webkit-full-screen .btns { display:none !important; }
+
+        @media (max-width:768px) {
+            .header h1 { font-size:48px; }
+            .header .logo-img { height:80px; width:80px; }
+            .level-info { font-size:clamp(22px,6vw,34px); }
+            .timer { font-size:clamp(50px,15vw,80px); }
+            .poker-hand.left { left:clamp(8px,3vw,24px); }
+            .poker-hand.right { right:clamp(8px,3vw,24px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="gold-line-top"></div>
+    <div class="gold-line-bottom"></div>
+    <div class="corner-ornament tl"></div>
+    <div class="corner-ornament tr"></div>
+    <div class="corner-ornament bl"></div>
+    <div class="corner-ornament br"></div>
+
+    <div class="poker-hand left">
+        <span class="hand-label">Pocket Aces</span>
+        <div class="cards-stack">
+            <div class="playing-card card-red card-back">
+                <div class="card-corner top-left"><span class="card-rank">A</span><span class="card-suit">♦</span></div>
+                <span class="card-center-suit">♦</span>
+                <div class="card-corner bottom-right"><span class="card-rank">A</span><span class="card-suit">♦</span></div>
+            </div>
+            <div class="playing-card card-red card-front">
+                <div class="card-corner top-left"><span class="card-rank">A</span><span class="card-suit">♥</span></div>
+                <span class="card-center-suit">♥</span>
+                <div class="card-corner bottom-right"><span class="card-rank">A</span><span class="card-suit">♥</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="poker-hand right">
+        <span class="hand-label">Pocket Kings</span>
+        <div class="cards-stack">
+            <div class="playing-card card-black card-back">
+                <div class="card-corner top-left"><span class="card-rank">K</span><span class="card-suit">♣</span></div>
+                <span class="card-center-suit">♣</span>
+                <div class="card-corner bottom-right"><span class="card-rank">K</span><span class="card-suit">♣</span></div>
+            </div>
+            <div class="playing-card card-black card-front">
+                <div class="card-corner top-left"><span class="card-rank">K</span><span class="card-suit">♠</span></div>
+                <span class="card-center-suit">♠</span>
+                <div class="card-corner bottom-right"><span class="card-rank">K</span><span class="card-suit">♠</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="logo-wrap">
+            <img class="logo-img" src="logo.jpg" alt="NUTS BAR" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback">N</div>
+        </div>
+        <h1>NUTS BAR</h1>
+        <div class="clock-badge" id="liveClock"><span class="clock-label">当前时间</span>--:--</div>
+    </div>
+
+    <div class="main">
+        <div class="stage-badge" id="stageBadge">盲注级别</div>
+        <div class="level-info" id="levelInfo">盲注: 100/200</div>
+        <div class="timer-wrap"><div class="timer" id="timer">15:00</div></div>
+        <div class="next-preview" id="nextPreview">下一级: 200/400</div>
+        <div class="progress-bar-wrap" id="progressBar"></div>
+    </div>
+
+    <div class="btns">
+        <button class="btn-start" id="startBtn">▶ 开始</button>
+        <button class="btn-pause paused-state" id="pauseBtn">⏸ 暂停</button>
+        <button class="btn-reset" id="resetBtn">↺ 重置</button>
+        <button class="btn-nav" id="prevBtn">◀ 上一级</button>
+        <button class="btn-nav" id="nextBtn">下一级 ▶</button>
+        <button class="btn-fullscreen" id="fullBtn">⛶ 全屏</button>
+        <button class="btn-settings" id="settingsBtn">⚙ 设置</button>
+    </div>
+
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-panel">
+            <button class="settings-close" id="settingsClose">✕</button>
+            <h2>⚙ 盲注结构设置</h2>
+            <div class="settings-list-wrap" id="settingsList"></div>
+            <div class="settings-actions">
+                <button id="btnAddLevel">＋ 添加级别</button>
+                <button class="btn-save" id="btnSaveSettings">💾 保存并使用</button>
+                <button class="btn-reset-default" id="btnResetDefault">↺ 恢复默认</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const STORAGE_KEY = 'nutsbar_blind_levels';
+            const DEFAULT_LEVELS = [
+                { type: 'blind', blind1: 100, blind2: 200, ante: 0, minutes: 15, label: '盲注级别 1' },
+                { type: 'blind', blind1: 200, blind2: 400, ante: 0, minutes: 15, label: '盲注级别 2' },
+                { type: 'blind', blind1: 300, blind2: 600, ante: 0, minutes: 15, label: '盲注级别 3' },
+                { type: 'blind', blind1: 400, blind2: 800, ante: 0, minutes: 15, label: '盲注级别 4' },
+                { type: 'break', blind1: 0, blind2: 0, ante: 0, minutes: 5, label: '休息时间 1' },
+                { type: 'blind', blind1: 500, blind2: 1000, ante: 0, minutes: 15, label: '盲注级别 5' },
+                { type: 'blind', blind1: 600, blind2: 1200, ante: 0, minutes: 15, label: '盲注级别 6' },
+                { type: 'blind', blind1: 800, blind2: 1600, ante: 0, minutes: 15, label: '盲注级别 7' },
+                { type: 'blind', blind1: 1000, blind2: 2000, ante: 0, minutes: 15, label: '盲注级别 8' },
+                { type: 'break', blind1: 0, blind2: 0, ante: 0, minutes: 5, label: '休息时间 2' },
+                { type: 'blind', blind1: 1500, blind2: 3000, ante: 0, minutes: 15, label: '盲注级别 9' },
+                { type: 'blind', blind1: 2000, blind2: 4000, ante: 0, minutes: 15, label: '盲注级别 10' },
+                { type: 'blind', blind1: 2500, blind2: 5000, ante: 0, minutes: 15, label: '盲注级别 11' },
+                { type: 'blind', blind1: 3000, blind2: 6000, ante: 0, minutes: 15, label: '盲注级别 12' },
+            ];
+
+            function loadLevels() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            return parsed.map(lv => ({
+                                type: lv.type === 'break' ? 'break' : 'blind',
+                                blind1: lv.type === 'break' ? 0 : (parseInt(lv.blind1) || 0),
+                                blind2: lv.type === 'break' ? 0 : (parseInt(lv.blind2) || 0),
+                                ante: lv.type === 'break' ? 0 : (parseInt(lv.ante) || 0),
+                                minutes: parseInt(lv.minutes) || 15,
+                                label: lv.label || (lv.type === 'break' ? '休息时间' : '盲注级别'),
+                            }));
+                        }
+                    }
+                } catch (e) {}
+                return JSON.parse(JSON.stringify(DEFAULT_LEVELS));
+            }
+
+            function saveLevels(levelsArr) {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(levelsArr)); return true; } catch (e) { return false; }
+            }
+
+            let levels = loadLevels();
+            let levelIndex = 0;
+            let secondsLeft = levels[0].minutes * 60;
+            let timerInterval = null;
+            let isRunning = false;
+            let audioCtx = null;
+            let settingsEditedLevels = null;
+
+            const elTimer = document.getElementById('timer');
+            const elLevelInfo = document.getElementById('levelInfo');
+            const elNextPreview = document.getElementById('nextPreview');
+            const elStageBadge = document.getElementById('stageBadge');
+            const elStartBtn = document.getElementById('startBtn');
+            const elPauseBtn = document.getElementById('pauseBtn');
+            const elResetBtn = document.getElementById('resetBtn');
+            const elPrevBtn = document.getElementById('prevBtn');
+            const elNextBtn = document.getElementById('nextBtn');
+            const elFullBtn = document.getElementById('fullBtn');
+            const elSettingsBtn = document.getElementById('settingsBtn');
+            const elProgressBar = document.getElementById('progressBar');
+            const elLiveClock = document.getElementById('liveClock');
+            const elSettingsOverlay = document.getElementById('settingsOverlay');
+            const elSettingsList = document.getElementById('settingsList');
+            const elSettingsClose = document.getElementById('settingsClose');
+            const elBtnSaveSettings = document.getElementById('btnSaveSettings');
+            const elBtnResetDefault = document.getElementById('btnResetDefault');
+            const elBtnAddLevel = document.getElementById('btnAddLevel');
+
+            function initAudio() {
+                if (!audioCtx) {
+                    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+            }
+
+            // 仅保留最后10秒的滴答声
+            function playDangerTick() { 
+                if (!audioCtx) return;
+                try {
+                    const t = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1400, t);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.06);
+                } catch (e) {}
+            }
+
+            function render() {
+                if (levelIndex >= levels.length) {
+                    levelIndex = levels.length - 1;
+                    if (levelIndex < 0) levelIndex = 0;
+                    secondsLeft = levels[levelIndex].minutes * 60;
+                }
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                elTimer.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                const lv = levels[levelIndex];
+                if (lv.type === 'break') {
+                    elLevelInfo.textContent = `☕ 休息时间 — ${lv.minutes} 分钟`;
+                    elLevelInfo.classList.add('break-mode');
+                    elStageBadge.textContent = '休息中';
+                    elStageBadge.classList.add('break-mode');
+                    elTimer.classList.add('break-timer');
+                    elTimer.classList.remove('warning','danger');
+                } else {
+                    elLevelInfo.innerHTML = `<span class="blinds-gold">盲注: ${lv.blind1}/${lv.blind2}</span>`;
+                    if (lv.ante > 0) elLevelInfo.innerHTML += ` <span style="font-size:0.6em;color:var(--text-dim);">| 前注: ${lv.ante}</span>`;
+                    elLevelInfo.classList.remove('break-mode');
+                    elStageBadge.textContent = lv.label || '盲注级别';
+                    elStageBadge.classList.remove('break-mode');
+                    elTimer.classList.remove('break-timer');
+                }
+                const nextIdx = levelIndex + 1;
+                if (nextIdx < levels.length) {
+                    const nextLv = levels[nextIdx];
+                    elNextPreview.innerHTML = nextLv.type === 'break' ? `<span>下一阶段: ☕ 休息</span> (${nextLv.minutes}分钟)` : `<span>下一级: ${nextLv.blind1}/${nextLv.blind2}</span>`;
+                    elNextPreview.style.display = '';
+                } else {
+                    elNextPreview.innerHTML = '<span>🏆 最终级别</span>';
+                    elNextPreview.style.display = '';
+                }
+                if (lv.type === 'blind' && isRunning) {
+                    if (secondsLeft <= 10 && secondsLeft > 0) { elTimer.classList.add('danger'); elTimer.classList.remove('warning'); }
+                    else if (secondsLeft <= 60 && secondsLeft > 10) { elTimer.classList.add('warning'); elTimer.classList.remove('danger'); }
+                    else { elTimer.classList.remove('warning','danger'); }
+                } else if (!isRunning) {
+                    elTimer.classList.remove('warning','danger');
+                    if (lv.type === 'blind') elTimer.classList.add('paused-blink');
+                    else elTimer.classList.remove('paused-blink');
+                } else { elTimer.classList.remove('warning','danger','paused-blink'); }
+                document.title = `${isRunning?'▶':'⏸'} ${elTimer.textContent} | ${lv.type==='break'?'休息':lv.blind1+'/'+lv.blind2} | NUTS BAR`;
+                updateButtonStates();
+                renderProgressBar();
+            }
+
+            function updateButtonStates() {
+                if (isRunning) {
+                    elStartBtn.textContent = '▶ 运行中';
+                    elStartBtn.classList.add('running');
+                    elPauseBtn.textContent = '⏸ 暂停';
+                    elPauseBtn.classList.remove('paused-state');
+                    elPauseBtn.disabled = false;
+                } else {
+                    elStartBtn.textContent = '▶ 开始';
+                    elStartBtn.classList.remove('running');
+                    elPauseBtn.textContent = '⏸ 暂停';
+                    elPauseBtn.classList.add('paused-state');
+                    elPauseBtn.disabled = true;
+                }
+            }
+
+            function renderProgressBar() {
+                let html = '';
+                for (let i = 0; i < levels.length; i++) {
+                    let cls = 'progress-dot';
+                    if (i === levelIndex) cls += ' active';
+                    else if (i < levelIndex) cls += ' done';
+                    if (levels[i].type === 'break') cls += ' break-dot';
+                    html += `<span class="${cls}" data-index="${i}" title="${levels[i].type==='break'?'休息':levels[i].blind1+'/'+levels[i].blind2} — ${levels[i].minutes}分钟"></span>`;
+                }
+                elProgressBar.innerHTML = html;
+                elProgressBar.querySelectorAll('.progress-dot').forEach(dot => {
+                    dot.addEventListener('click', function(){
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        if (idx !== levelIndex) jumpToLevel(idx);
+                    });
+                });
+            }
+
+            function startTimer() {
+                if (isRunning || levels.length === 0) return;
+                initAudio();
+                isRunning = true;
+                elTimer.classList.remove('paused-blink');
+                updateButtonStates();
+                const endTime = Date.now() + secondsLeft * 1000;
+                timerInterval = setInterval(() => {
+                    const now = Date.now();
+                    const remaining = Math.max(0, Math.round((endTime - now) / 1000));
+                    const prevSeconds = secondsLeft;
+                    secondsLeft = remaining;
+                    render();
+                    // 仅盲注最后10秒播放滴答声
+                    if (levels[levelIndex].type === 'blind' && isRunning && secondsLeft <= 10 && secondsLeft > 0 && secondsLeft < prevSeconds) {
+                        playDangerTick();
+                    }
+                    if (secondsLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        isRunning = false;
+                        advanceToNextLevel();
+                    }
+                }, 200);
+            }
+
+            function pauseTimer() {
+                if (!isRunning) return;
+                clearInterval(timerInterval);
+                timerInterval = null;
+                isRunning = false;
+                elTimer.classList.remove('warning','danger');
+                if (levels[levelIndex].type === 'blind') elTimer.classList.add('paused-blink');
+                updateButtonStates();
+                render();
+            }
+
+            function resetTimer() {
+                pauseTimer();
+                levelIndex = 0;
+                secondsLeft = levels.length > 0 ? levels[0].minutes * 60 : 0;
+                elTimer.classList.remove('warning','danger','paused-blink','break-timer');
+                elLevelInfo.classList.remove('break-mode');
+                elStageBadge.classList.remove('break-mode');
+                updateButtonStates();
+                render();
+                document.title = 'NUTS BAR 升盲系统';
+            }
+
+            function jumpToLevel(idx) {
+                if (idx < 0 || idx >= levels.length) return;
+                const wasRunning = isRunning;
+                pauseTimer();
+                levelIndex = idx;
+                secondsLeft = levels[levelIndex].minutes * 60;
+                updateButtonStates();
+                render();
+                if (wasRunning) startTimer();
+            }
+
+            function advanceToNextLevel() {
+                if (levelIndex < levels.length - 1) {
+                    levelIndex++;
+                    secondsLeft = levels[levelIndex].minutes * 60;
+                    updateButtonStates();
+                    render();
+                    startTimer();
+                } else {
+                    isRunning = false;
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    elTimer.classList.remove('warning','danger','paused-blink','break-timer');
+                    elLevelInfo.classList.remove('break-mode');
+                    elStageBadge.classList.remove('break-mode');
+                    elLevelInfo.innerHTML = '<span style="font-size:1.3em;">🏆 锦标赛结束！</span>';
+                    elNextPreview.style.display = 'none';
+                    elStageBadge.textContent = '结束';
+                    updateButtonStates();
+                    render();
+                    document.title = '🏆 锦标赛结束 | NUTS BAR';
+                }
+            }
+
+            function prevLevel() {
+                if (levelIndex <= 0) return;
+                const wasRunning = isRunning;
+                pauseTimer();
+                levelIndex--;
+                secondsLeft = levels[levelIndex].minutes * 60;
+                updateButtonStates();
+                render();
+                if (wasRunning) startTimer();
+            }
+
+            function nextLevel() {
+                if (levelIndex >= levels.length - 1) return;
+                const wasRunning = isRunning;
+                pauseTimer();
+                levelIndex++;
+                secondsLeft = levels[levelIndex].minutes * 60;
+                updateButtonStates();
+                render();
+                if (wasRunning) startTimer();
+            }
+
+            async function toggleFullscreen() {
+                try {
+                    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                        const el = document.documentElement;
+                        if (el.requestFullscreen) await el.requestFullscreen();
+                        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+                    } else {
+                        if (document.exitFullscreen) await document.exitFullscreen();
+                        else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+                    }
+                } catch (e) {}
+            }
+
+            function updateLiveClock() {
+                const now = new Date();
+                const h = now.getHours().toString().padStart(2,'0');
+                const m = now.getMinutes().toString().padStart(2,'0');
+                elLiveClock.innerHTML = `<span class="clock-label">当前时间</span>${h}:${m}`;
+            }
+
+            // 设置面板逻辑（保持不变）
+            function openSettings() {
+                settingsEditedLevels = JSON.parse(JSON.stringify(levels));
+                renderSettingsList();
+                elSettingsOverlay.classList.add('open');
+            }
+            function closeSettings() { elSettingsOverlay.classList.remove('open'); settingsEditedLevels = null; }
+            function renderSettingsList() {
+                if (!settingsEditedLevels) return;
+                let html = '';
+                settingsEditedLevels.forEach((lv, idx) => {
+                    const isBreak = lv.type === 'break';
+                    html += `<div class="settings-row${isBreak?' break-row':''}" data-index="${idx}">
+                        <span class="row-num">${idx+1}</span>
+                        <select class="type-select" data-index="${idx}">
+                            <option value="blind"${!isBreak?' selected':''}>盲注</option>
+                            <option value="break"${isBreak?' selected':''}>休息</option>
+                        </select>
+                        <input type="number" class="num-input blind1-input" value="${lv.blind1}" min="0" step="25" data-index="${idx}"${isBreak?' disabled':''}>
+                        <span style="color:var(--text-muted);font-size:12px;">/</span>
+                        <input type="number" class="num-input blind2-input" value="${lv.blind2}" min="0" step="25" data-index="${idx}"${isBreak?' disabled':''}>
+                        <span style="color:var(--text-muted);font-size:10px;">前注</span>
+                        <input type="number" class="num-input ante-input" value="${lv.ante}" min="0" step="5" data-index="${idx}"${isBreak?' disabled':''}>
+                        <span style="color:var(--text-muted);font-size:10px;">分</span>
+                        <input type="number" class="num-input min-input" value="${lv.minutes}" min="1" max="120" data-index="${idx}">
+                        <input type="text" class="label-input" value="${escapeHtml(lv.label||'')}" placeholder="标签" data-index="${idx}">
+                        <button class="row-delete" data-index="${idx}" title="删除">✕</button>
+                    </div>`;
+                });
+                elSettingsList.innerHTML = html;
+                // 事件绑定...
+                elSettingsList.querySelectorAll('.type-select').forEach(sel => {
+                    sel.addEventListener('change', function(){
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        settingsEditedLevels[idx].type = this.value;
+                        if (this.value === 'break') { settingsEditedLevels[idx].blind1 = 0; settingsEditedLevels[idx].blind2 = 0; settingsEditedLevels[idx].ante = 0; }
+                        renderSettingsList();
+                    });
+                });
+                elSettingsList.querySelectorAll('.blind1-input, .blind2-input, .ante-input, .min-input').forEach(inp => {
+                    inp.addEventListener('input', function(){
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        if (this.classList.contains('blind1-input')) settingsEditedLevels[idx].blind1 = Math.max(0, parseInt(this.value)||0);
+                        if (this.classList.contains('blind2-input')) settingsEditedLevels[idx].blind2 = Math.max(0, parseInt(this.value)||0);
+                        if (this.classList.contains('ante-input')) settingsEditedLevels[idx].ante = Math.max(0, parseInt(this.value)||0);
+                        if (this.classList.contains('min-input')) settingsEditedLevels[idx].minutes = Math.max(1, Math.min(120, parseInt(this.value)||15));
+                    });
+                });
+                elSettingsList.querySelectorAll('.label-input').forEach(inp => {
+                    inp.addEventListener('input', function(){
+                        settingsEditedLevels[parseInt(this.getAttribute('data-index'))].label = this.value;
+                    });
+                });
+                elSettingsList.querySelectorAll('.row-delete').forEach(btn => {
+                    btn.addEventListener('click', function(){
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        if (settingsEditedLevels.length <= 1) { alert('至少保留一个级别'); return; }
+                        settingsEditedLevels.splice(idx, 1);
+                        renderSettingsList();
+                    });
+                });
+            }
+            function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str||''; return d.innerHTML; }
+            function saveSettingsAndApply() {
+                if (!settingsEditedLevels || settingsEditedLevels.length === 0) return;
+                const normalized = settingsEditedLevels.map(lv => ({
+                    type: lv.type === 'break' ? 'break' : 'blind',
+                    blind1: lv.type === 'break' ? 0 : (parseInt(lv.blind1)||0),
+                    blind2: lv.type === 'break' ? 0 : (parseInt(lv.blind2)||0),
+                    ante: lv.type === 'break' ? 0 : (parseInt(lv.ante)||0),
+                    minutes: parseInt(lv.minutes)||15,
+                    label: lv.label || (lv.type === 'break' ? '休息时间' : '盲注级别'),
+                }));
+                if (saveLevels(normalized)) {
+                    levels = JSON.parse(JSON.stringify(normalized));
+                    closeSettings();
+                    pauseTimer();
+                    levelIndex = 0;
+                    secondsLeft = levels[0].minutes * 60;
+                    updateButtonStates();
+                    render();
+                    document.title = 'NUTS BAR 升盲系统';
+                } else { alert('保存失败'); }
+            }
+            function resetSettingsToDefault() { settingsEditedLevels = JSON.parse(JSON.stringify(DEFAULT_LEVELS)); renderSettingsList(); }
+            function addLevel() {
+                if (!settingsEditedLevels) return;
+                const last = settingsEditedLevels[settingsEditedLevels.length-1] || { type:'blind', blind1:100, blind2:200, ante:0, minutes:15, label:'盲注级别' };
+                settingsEditedLevels.push({ type: last.type, blind1: last.type==='break'?0:last.blind1, blind2: last.type==='break'?0:last.blind2, ante: last.type==='break'?0:(last.ante||0), minutes: last.minutes, label: last.type==='break'?'休息时间':'盲注级别 '+(settingsEditedLevels.length+1) });
+                renderSettingsList();
+                setTimeout(()=>{ elSettingsList.scrollTop = elSettingsList.scrollHeight; }, 100);
+            }
+
+            // 事件绑定
+            elStartBtn.addEventListener('click', startTimer);
+            elPauseBtn.addEventListener('click', pauseTimer);
+            elResetBtn.addEventListener('click', resetTimer);
+            elPrevBtn.addEventListener('click', prevLevel);
+            elNextBtn.addEventListener('click', nextLevel);
+            elFullBtn.addEventListener('click', toggleFullscreen);
+            elSettingsBtn.addEventListener('click', openSettings);
+            elSettingsClose.addEventListener('click', closeSettings);
+            elBtnSaveSettings.addEventListener('click', saveSettingsAndApply);
+            elBtnResetDefault.addEventListener('click', resetSettingsToDefault);
+            elBtnAddLevel.addEventListener('click', addLevel);
+            elSettingsOverlay.addEventListener('click', e => { if (e.target === elSettingsOverlay) closeSettings(); });
+
+            document.addEventListener('keydown', e => {
+                if (elSettingsOverlay.classList.contains('open') && e.key === 'Escape') { e.preventDefault(); closeSettings(); return; }
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+                switch (e.key.toLowerCase()) {
+                    case ' ': e.preventDefault(); isRunning ? pauseTimer() : startTimer(); break;
+                    case 'arrowleft': e.preventDefault(); prevLevel(); break;
+                    case 'arrowright': e.preventDefault(); nextLevel(); break;
+                    case 'r': e.preventDefault(); resetTimer(); break;
+                    case 'f': e.preventDefault(); toggleFullscreen(); break;
+                }
+            });
+            document.addEventListener('fullscreenchange', ()=>{ render(); setTimeout(renderProgressBar,300); });
+            document.addEventListener('webkitfullscreenchange', ()=>{ render(); setTimeout(renderProgressBar,300); });
+            document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) { updateLiveClock(); render(); } });
+
+            updateLiveClock();
+            setInterval(updateLiveClock, 15000);
+            updateButtonStates();
+            render();
+            renderProgressBar();
+            elTimer.classList.add('paused-blink');
+            document.title = 'NUTS BAR 升盲系统';
+        })();
+    </script>
+</body>
+</html>
