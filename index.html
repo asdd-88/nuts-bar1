@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NUTS BAR 升盲系统</title>
     
+    <!-- PWA Manifest 引用外部文件 -->
+    <link rel="manifest" href="manifest.json">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NUTS BAR">
+    <link rel="apple-touch-icon" href="icon-192.png">
     
     <style>
         :root {
@@ -46,7 +50,6 @@
             -webkit-user-select: none;
         }
 
-        /* 金色装饰线 */
         .gold-line-top, .gold-line-bottom {
             position: absolute;
             left: 5%;
@@ -59,7 +62,6 @@
         .gold-line-top { top: 0; }
         .gold-line-bottom { bottom: 0; }
 
-        /* 扑克手牌 - 适度大小 */
         .poker-hand {
             position: absolute;
             top: 50%;
@@ -125,7 +127,6 @@
         }
         .poker-hand.right .card-front { animation-delay: 1.25s; }
 
-        /* HEADER */
         .header {
             display: flex;
             align-items: center;
@@ -182,7 +183,6 @@
         }
         .clock-label { font-size: 14px; color: var(--text-muted); margin-right: 8px; }
 
-        /* MAIN */
         .main {
             flex: 1;
             display: flex;
@@ -231,7 +231,6 @@
             text-shadow: 0 0 25px rgba(232,201,122,0.4);
         }
 
-        /* 计时器 */
         .timer {
             font-size: 130px;
             font-weight: 900;
@@ -301,7 +300,6 @@
         .progress-dot.break-dot { border-radius: 50%; background: rgba(122,220,228,0.2); }
         .progress-dot.break-dot.active { background: var(--break-color); box-shadow: 0 0 14px rgba(122,220,228,0.7); }
 
-        /* 按钮 */
         .btns {
             display: flex;
             gap: 14px;
@@ -354,7 +352,6 @@
             color: #d5c0a0;
         }
 
-        /* 设置面板 */
         .settings-overlay {
             position: fixed;
             inset: 0;
@@ -445,7 +442,6 @@
             border: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* 响应式手机 */
         @media (max-width: 768px) {
             .header h1 { font-size: 28px; }
             .header .logo-img { height: 44px; width: 44px; border-radius: 10px; }
@@ -472,7 +468,6 @@
     <div class="gold-line-top"></div>
     <div class="gold-line-bottom"></div>
 
-    <!-- 左侧对A -->
     <div class="poker-hand left">
         <span class="hand-label">Pocket Aces</span>
         <div class="cards-stack">
@@ -488,8 +483,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 右侧对K -->
     <div class="poker-hand right">
         <span class="hand-label">Pocket Kings</span>
         <div class="cards-stack">
@@ -506,7 +499,6 @@
         </div>
     </div>
 
-    <!-- HEADER -->
     <div class="header">
         <div class="logo-wrap">
             <img class="logo-img" src="logo.jpg" alt="NUTS BAR" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
@@ -516,7 +508,6 @@
         <div class="clock-badge" id="liveClock"><span class="clock-label">当前时间</span>--:--</div>
     </div>
 
-    <!-- MAIN -->
     <div class="main">
         <div class="stage-badge" id="stageBadge">盲注级别</div>
         <div class="level-info" id="levelInfo">盲注: 100/200</div>
@@ -525,7 +516,6 @@
         <div class="progress-bar-wrap" id="progressBar"></div>
     </div>
 
-    <!-- 按钮 -->
     <div class="btns">
         <button class="btn-start" id="startBtn">▶ 开始</button>
         <button class="btn-pause paused-state" id="pauseBtn">⏸ 暂停</button>
@@ -536,7 +526,6 @@
         <button class="btn-settings" id="settingsBtn">⚙ 设置</button>
     </div>
 
-    <!-- 设置面板 -->
     <div class="settings-overlay" id="settingsOverlay">
         <div class="settings-panel">
             <button class="settings-close" id="settingsClose">✕</button>
@@ -551,11 +540,10 @@
     </div>
 
     <script>
-        // ==================== Service Worker ====================
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'nuts-bar-tv-v2';
+                    const CACHE_NAME = 'nuts-bar-tv-v3';
                     self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])).then(() => self.skipWaiting())); });
                     self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(n => Promise.all(n.filter(x => x !== CACHE_NAME).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
                     self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });
@@ -565,7 +553,6 @@
             });
         }
 
-        // ==================== 计时器逻辑 ====================
         (function() {
             const STORAGE_KEY = 'nutsbar_blind_levels';
             const DEFAULT_LEVELS = [
