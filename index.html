@@ -292,8 +292,9 @@
             padding: 14px 30px 20px;
         }
 
-        /* 全屏后隐藏按钮栏 */
+        /* 全屏后默认隐藏按钮栏，按确定键显示 */
         body.fullscreen-mode .btns { display: none; }
+        body.fullscreen-mode .btns.show { display: flex; }
 
         button {
             background: rgba(25,12,6,0.75);
@@ -507,7 +508,7 @@
         <div class="next-preview" id="nextPreview">下一级: 200/400</div>
     </div>
 
-    <div class="btns">
+    <div class="btns" id="btnsBar">
         <button class="btn-start" id="startBtn">▶ 开始</button>
         <button class="btn-pause paused-state" id="pauseBtn">⏸ 暂停</button>
         <button class="btn-reset" id="resetBtn">↺ 重置</button>
@@ -534,7 +535,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'nuts-bar-tv-v11';
+                    const CACHE_NAME = 'nuts-bar-tv-v12';
                     self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])).then(() => self.skipWaiting())); });
                     self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(n => Promise.all(n.filter(x => x !== CACHE_NAME).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
                     self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });
@@ -592,6 +593,7 @@
             let isRunning = false;
             let audioCtx = null;
             let settingsEditedLevels = null;
+            let hideBtnsTimeout = null;
 
             const elTimer = document.getElementById('timer');
             const elLevelInfo = document.getElementById('levelInfo');
@@ -604,6 +606,7 @@
             const elNextBtn = document.getElementById('nextBtn');
             const elFullBtn = document.getElementById('fullBtn');
             const elSettingsBtn = document.getElementById('settingsBtn');
+            const elBtnsBar = document.getElementById('btnsBar');
             const elLiveClock = document.getElementById('liveClock');
             const elSettingsOverlay = document.getElementById('settingsOverlay');
             const elSettingsList = document.getElementById('settingsList');
@@ -691,6 +694,14 @@
                 }
             }
 
+            function showButtonsTemporarily() {
+                elBtnsBar.classList.add('show');
+                if (hideBtnsTimeout) clearTimeout(hideBtnsTimeout);
+                hideBtnsTimeout = setTimeout(() => {
+                    elBtnsBar.classList.remove('show');
+                }, 5000);
+            }
+
             function startTimer() {
                 if (isRunning || levels.length === 0) return;
                 initAudio();
@@ -768,9 +779,11 @@
             function toggleFullscreen() {
                 if (document.body.classList.contains('fullscreen-mode')) {
                     document.body.classList.remove('fullscreen-mode');
+                    elBtnsBar.classList.remove('show');
                     elFullBtn.textContent = '⛶ 全屏';
                 } else {
                     document.body.classList.add('fullscreen-mode');
+                    elBtnsBar.classList.remove('show');
                     elFullBtn.textContent = '⛶ 退出全屏';
                 }
             }
@@ -861,9 +874,9 @@
                 switch (e.key.toLowerCase()) {
                     case 'enter':
                         e.preventDefault();
-                        // 全屏模式下按确定键退出全屏
+                        // 全屏模式下按确定键显示按钮栏5秒
                         if (document.body.classList.contains('fullscreen-mode')) {
-                            toggleFullscreen();
+                            showButtonsTemporarily();
                         }
                         break;
                     case 'r':
