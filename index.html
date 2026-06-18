@@ -534,7 +534,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'nuts-bar-tv-v10';
+                    const CACHE_NAME = 'nuts-bar-tv-v11';
                     self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])).then(() => self.skipWaiting())); });
                     self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(n => Promise.all(n.filter(x => x !== CACHE_NAME).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
                     self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });
@@ -859,6 +859,13 @@
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
                 
                 switch (e.key.toLowerCase()) {
+                    case 'enter':
+                        e.preventDefault();
+                        // 全屏模式下按确定键退出全屏
+                        if (document.body.classList.contains('fullscreen-mode')) {
+                            toggleFullscreen();
+                        }
+                        break;
                     case 'r':
                         e.preventDefault();
                         resetTimer();
