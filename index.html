@@ -2,15 +2,16 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NUTS BAR 升盲系统</title>
     
-    <!-- PWA Manifest 引用外部文件 -->
     <link rel="manifest" href="manifest.json">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NUTS BAR">
+    <meta name="theme-color" content="#1a0f0a">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <style>
@@ -36,18 +37,27 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a0f0a;
+        }
+
         body {
             background: radial-gradient(ellipse at 50% 30%, #2d1812 0%, #1a0f0a 50%, #0d0705 100%);
             color: var(--text);
             font-family: var(--font-display);
-            width: 100vw;
-            height: 100vh;
             display: flex;
             flex-direction: column;
-            position: relative;
-            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             user-select: none;
             -webkit-user-select: none;
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
         }
 
         .gold-line-top, .gold-line-bottom {
@@ -189,7 +199,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 24px;
+            gap: 28px;
             z-index: 10;
             padding: 10px 0;
         }
@@ -272,34 +282,6 @@
         }
         .next-preview span { color: #d5c0a0; font-weight: 600; }
 
-        .progress-bar-wrap {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 85vw;
-            padding: 0 16px;
-        }
-        .progress-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-            background: rgba(255,255,255,0.1);
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.25s;
-            flex-shrink: 0;
-        }
-        .progress-dot.active {
-            background: var(--primary);
-            box-shadow: 0 0 14px rgba(232,168,80,0.7);
-            transform: scale(1.4);
-            border-color: rgba(245,200,130,0.5);
-        }
-        .progress-dot.done { background: rgba(200,150,80,0.5); }
-        .progress-dot.break-dot { border-radius: 50%; background: rgba(122,220,228,0.2); }
-        .progress-dot.break-dot.active { background: var(--break-color); box-shadow: 0 0 14px rgba(122,220,228,0.7); }
-
         .btns {
             display: flex;
             gap: 14px;
@@ -309,6 +291,10 @@
             flex-shrink: 0;
             padding: 14px 30px 20px;
         }
+
+        /* 全屏后隐藏按钮栏 */
+        body.fullscreen-mode .btns { display: none; }
+
         button {
             background: rgba(25,12,6,0.75);
             color: #d5c8b8;
@@ -324,6 +310,12 @@
             font-family: inherit;
             white-space: nowrap;
             text-align: center;
+        }
+        button:focus {
+            border-color: var(--gold-light);
+            box-shadow: 0 0 20px rgba(245,200,130,0.6);
+            outline: none;
+            transform: scale(1.05);
         }
         button:hover {
             border-color: rgba(232,201,122,0.55);
@@ -513,7 +505,6 @@
         <div class="level-info" id="levelInfo">盲注: 100/200</div>
         <div class="timer-wrap"><div class="timer" id="timer">15:00</div></div>
         <div class="next-preview" id="nextPreview">下一级: 200/400</div>
-        <div class="progress-bar-wrap" id="progressBar"></div>
     </div>
 
     <div class="btns">
@@ -543,7 +534,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'nuts-bar-tv-v3';
+                    const CACHE_NAME = 'nuts-bar-tv-v10';
                     self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])).then(() => self.skipWaiting())); });
                     self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(n => Promise.all(n.filter(x => x !== CACHE_NAME).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
                     self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });
@@ -613,7 +604,6 @@
             const elNextBtn = document.getElementById('nextBtn');
             const elFullBtn = document.getElementById('fullBtn');
             const elSettingsBtn = document.getElementById('settingsBtn');
-            const elProgressBar = document.getElementById('progressBar');
             const elLiveClock = document.getElementById('liveClock');
             const elSettingsOverlay = document.getElementById('settingsOverlay');
             const elSettingsList = document.getElementById('settingsList');
@@ -683,7 +673,6 @@
                 } else { elTimer.classList.remove('warning','danger','paused-blink'); }
                 document.title = `${isRunning?'▶':'⏸'} ${elTimer.textContent} | ${lv.type==='break'?'休息':lv.blind1+'/'+lv.blind2} | NUTS BAR`;
                 updateButtonStates();
-                renderProgressBar();
             }
 
             function updateButtonStates() {
@@ -700,24 +689,6 @@
                     elPauseBtn.classList.add('paused-state');
                     elPauseBtn.disabled = true;
                 }
-            }
-
-            function renderProgressBar() {
-                let html = '';
-                for (let i = 0; i < levels.length; i++) {
-                    let cls = 'progress-dot';
-                    if (i === levelIndex) cls += ' active';
-                    else if (i < levelIndex) cls += ' done';
-                    if (levels[i].type === 'break') cls += ' break-dot';
-                    html += `<span class="${cls}" data-index="${i}" title="${levels[i].type==='break'?'休息':levels[i].blind1+'/'+levels[i].blind2}"></span>`;
-                }
-                elProgressBar.innerHTML = html;
-                elProgressBar.querySelectorAll('.progress-dot').forEach(dot => {
-                    dot.addEventListener('click', function(){
-                        const idx = parseInt(this.getAttribute('data-index'));
-                        if (idx !== levelIndex) jumpToLevel(idx);
-                    });
-                });
             }
 
             function startTimer() {
@@ -768,17 +739,6 @@
                 document.title = 'NUTS BAR 升盲系统';
             }
 
-            function jumpToLevel(idx) {
-                if (idx < 0 || idx >= levels.length) return;
-                const wasRunning = isRunning;
-                pauseTimer();
-                levelIndex = idx;
-                secondsLeft = levels[levelIndex].minutes * 60;
-                updateButtonStates();
-                render();
-                if (wasRunning) startTimer();
-            }
-
             function advanceToNextLevel() {
                 if (levelIndex < levels.length - 1) {
                     levelIndex++;
@@ -805,16 +765,14 @@
             function prevLevel() { if (levelIndex <= 0) return; const was = isRunning; pauseTimer(); levelIndex--; secondsLeft = levels[levelIndex].minutes * 60; updateButtonStates(); render(); if (was) startTimer(); }
             function nextLevel() { if (levelIndex >= levels.length - 1) return; const was = isRunning; pauseTimer(); levelIndex++; secondsLeft = levels[levelIndex].minutes * 60; updateButtonStates(); render(); if (was) startTimer(); }
 
-            async function toggleFullscreen() {
-                try {
-                    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                        if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-                        else if (document.documentElement.webkitRequestFullscreen) await document.documentElement.webkitRequestFullscreen();
-                    } else {
-                        if (document.exitFullscreen) await document.exitFullscreen();
-                        else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
-                    }
-                } catch (e) {}
+            function toggleFullscreen() {
+                if (document.body.classList.contains('fullscreen-mode')) {
+                    document.body.classList.remove('fullscreen-mode');
+                    elFullBtn.textContent = '⛶ 全屏';
+                } else {
+                    document.body.classList.add('fullscreen-mode');
+                    elFullBtn.textContent = '⛶ 退出全屏';
+                }
             }
 
             function updateLiveClock() {
@@ -899,12 +857,16 @@
             document.addEventListener('keydown', e => {
                 if (elSettingsOverlay.classList.contains('open') && e.key === 'Escape') { e.preventDefault(); closeSettings(); return; }
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+                
                 switch (e.key.toLowerCase()) {
-                    case ' ': e.preventDefault(); isRunning ? pauseTimer() : startTimer(); break;
-                    case 'arrowleft': e.preventDefault(); prevLevel(); break;
-                    case 'arrowright': e.preventDefault(); nextLevel(); break;
-                    case 'r': e.preventDefault(); resetTimer(); break;
-                    case 'f': e.preventDefault(); toggleFullscreen(); break;
+                    case 'r':
+                        e.preventDefault();
+                        resetTimer();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        toggleFullscreen();
+                        break;
                 }
             });
 
@@ -912,7 +874,6 @@
             setInterval(updateLiveClock, 15000);
             updateButtonStates();
             render();
-            renderProgressBar();
             elTimer.classList.add('paused-blink');
             document.title = 'NUTS BAR 升盲系统';
         })();
